@@ -33,6 +33,12 @@ def handle_disconnect():
         logging.info(f'Client {request.sid} left room {room}')
         emit('leave', {'sid': request.sid}, room=room)
 
+        # Check if there are any clients left in the room
+        if not any(request.sid != sid for sid in rooms.values()):
+            logging.info(f'Removing empty room {room}')
+            # Optionally: remove room from the room tracking system if empty
+            del rooms[room]
+
 # Handle incoming offer from client
 @socketio.on('offer')
 def handle_offer(data):
