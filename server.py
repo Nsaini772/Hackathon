@@ -4,8 +4,11 @@ import logging
 from google.cloud import speech
 import base64
 
-# Load API key from credit.json
-client = speech.SpeechClient.from_service_account_file("credit.json")
+# for local dev
+# # Load API key from credit.json
+# client = speech.SpeechClient.from_service_account_file("credit.json")
+# for remote
+client = speech.SpeechClient()
 
 app = Flask(__name__)
 socketio = SocketIO(app)
