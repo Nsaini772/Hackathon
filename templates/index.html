@@ -32,9 +32,13 @@
         let socket;
 
         const serverURL = "http://localhost:5000"; // Your server address
+        const room = "default_room"; // Room name
 
         // Create WebSocket connection
         socket = io(serverURL);
+
+        // Join the room
+        socket.emit('join', { room });
 
         // Start the call
         startCallButton.onclick = () => {
@@ -57,7 +61,7 @@
             // Handle ICE candidates
             peerConnection.onicecandidate = event => {
                 if (event.candidate) {
-                    socket.emit('ice-candidate', event.candidate);
+                    socket.emit('ice-candidate', { candidate: event.candidate, room });
                 }
             };
 
@@ -71,29 +75,29 @@
             await peerConnection.setLocalDescription(offer);
 
             // Send the offer to the server
-            socket.emit('offer', offer);
+            socket.emit('offer', { offer, room });
         }
 
         // Handle incoming offer
-        socket.on('offer', async offer => {
+        socket.on('offer', async data => {
             if (!peerConnection) {
                 startCall();
             }
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
-            socket.emit('answer', answer);
+            socket.emit('answer', { answer, room });
         });
 
         // Handle incoming answer
-        socket.on('answer', async answer => {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        socket.on('answer', async data => {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         });
 
         // Handle incoming ICE candidates
-        socket.on('ice-candidate', async candidate => {
+        socket.on('ice-candidate', async data => {
             try {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
             } catch (e) {
                 console.error('Error adding received ice candidate', e);
             }
