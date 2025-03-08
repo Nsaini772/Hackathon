@@ -1,109 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>WebRTC Phone Call</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebRTC Phone Call</title>
+  <style>
+    /* Main Styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin: 20px 0 30px;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    /* Join Section */
+    #join-section {
+      background-color: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    #join-section h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    /* Video Container Styling */
+    #call-section {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #local-video-container, #remote-video-container {
+      position: relative;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    #remote-video-container {
+      width: 100%;
+      height: 450px;
+      background-color: #2c3e50;
+    }
+
+    #local-video-container {
+      position: absolute;
+      bottom: 90px;
+      right: 20px;
+      width: 180px;
+      height: 120px;
+      z-index: 10;
+      border: 2px solid #fff;
+    }
+
+    /* Video Element Styling */
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background-color: #34495e;
+    }
+
+    /* Button Controls */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+      font-weight: 500;
+      outline: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .primary-btn {
+      background-color: #3498db;
+    }
+
+    .primary-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .success-btn {
+      background-color: #2ecc71;
+    }
+
+    .success-btn:hover {
+      background-color: #27ae60;
+    }
+
+    .danger-btn {
+      background-color: #e74c3c;
+    }
+
+    .danger-btn:hover {
+      background-color: #c0392b;
+    }
+
+    /* Connection Status */
+    .status {
+      margin-top: 15px;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 14px;
+      background-color: #f8f9fa;
+      color: #2c3e50;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      #remote-video-container {
+        height: 350px;
+      }
+      
+      #local-video-container {
+        width: 120px;
+        height: 90px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 24px;
+      }
+      
+      button {
+        padding: 10px 20px;
+        font-size: 14px;
+      }
+      
+      #join-section {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>WebRTC Phone Calling App</h1>
+  <h1>WebRTC Phone Calling App</h1>
+  
+  <div id="join-section">
+    <h2>Join a Call</h2>
+    <div class="input-group">
+      <input type="text" id="room-code" placeholder="Enter room code to join">
+    </div>
+    <div class="action-buttons">
+      <button id="create-room" class="primary-btn">Create New Room</button>
+      <button id="join-room" class="success-btn">Join Room</button>
+    </div>
+    <p id="room-display" class="status" style="margin-top: 20px; display: none;">
+      Your room code: <span id="current-room-code"></span>
+    </p>
+  </div>
+  
+  <div id="call-section">
+    <div id="remote-video-container">
+      <video id="remote-video" autoplay></video>
+    </div>
     
     <div id="local-video-container">
-        <video id="local-video" autoplay muted></video>
+      <video id="local-video" autoplay muted></video>
     </div>
-
-    <div id="remote-video-container">
-        <video id="remote-video" autoplay></video>
+    
+    <div class="controls">
+      <button id="hang-up" class="danger-btn">Hang Up</button>
     </div>
+    
+    <div class="status" id="connection-status">
+      Waiting for connection...
+    </div>
+  </div>
 
-    <button id="start-call">Start Call</button>
-    <button id="hang-up">Hang Up</button>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
-    <script>
-        // Variables
-        const localVideo = document.getElementById("local-video");
-        const remoteVideo = document.getElementById("remote-video");
-        const startCallButton = document.getElementById("start-call");
-        const hangUpButton = document.getElementById("hang-up");
-
-        let localStream;
-        let peerConnection;
-        let socket;
-
-        const serverURL = "https://hackathon-16y2.onrender.com"; 
-        const room = "default_room"; // Room name
-
-        // Create WebSocket connection
-        socket = io(serverURL);
-
-        // Join the room
-        socket.emit('join', { room });
-
-        // Start the call
-        startCallButton.onclick = () => {
-            startCall();
-        };
-
-        async function startCall() {
-            // Get local media stream
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            localVideo.srcObject = localStream;
-
-            // Create a new RTCPeerConnection
-            peerConnection = new RTCPeerConnection();
-
-            // Add local stream tracks to the peer connection
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
-
-            // Handle ICE candidates
-            peerConnection.onicecandidate = event => {
-                if (event.candidate) {
-                    socket.emit('ice-candidate', { candidate: event.candidate, room });
-                }
-            };
-
-            // Handle remote stream
-            peerConnection.ontrack = event => {
-                remoteVideo.srcObject = event.streams[0];
-            };
-
-            // Create an offer
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-
-            // Send the offer to the server
-            socket.emit('offer', { offer, room });
-        }
-
-        // Handle incoming offer
-        socket.on('offer', async data => {
-            if (!peerConnection) {
-                startCall();
-            }
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            socket.emit('answer', { answer, room });
-        });
-
-        // Handle incoming answer
-        socket.on('answer', async data => {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-        });
-
-        // Handle incoming ICE candidates
-        socket.on('ice-candidate', async data => {
-            try {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-            } catch (e) {
-                console.error('Error adding received ice candidate', e);
-            }
-        });
-    </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+  <script>
+  // Variables
+  const localVideo = document.getElementById("local-video");
+  const remoteVideo = document.getElementById("remote-video");
+  const hangUpButton = document.getElementById("hang-up");
+  const createRoomButton = document.getElementById("create-room");
+  const joinRoomButton = document.getElementById("join-room");
+  const roomCodeInput = document.getElementById("room-code");
+  const joinSection = document.getElementById("join-section");
+  const callSection = document.getElementById("call-section");
+  const connectionStatus = document.getElementById("connection-status");
+  const roomDisplay = document.getElementById("room-display");
+  const currentRoomCode = document.getElementById("current-room-code");
+  
+  let localStream;
+  let peerConnection;
+  let socket;
+  let currentRoom = null;
+  
+  const serverURL = "https://hackathon-16y2.onrender.com";
+  
+  // Connect to socket server
+  socket = io(serverURL);
+  
+  // Generate a random room code
+  function generateRoomCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+  
+  // Create a new room
+  createRoomButton.onclick = () => {
+    const roomCode = generateRoomCode();
+    roomCodeInput.value = roomCode;
+    currentRoomCode.textContent = roomCode;
+    roomDisplay.style.display = "block";
+    joinRoom(roomCode);
+  };
+  
+  // Join existing room
+  joinRoomButton.onclick = () => {
+    const roomCode = roomCodeInput.value.trim();
+    if (roomCode) {
+      currentRoomCode.textContent = roomCode;
+      roomDisplay.style.display = "block";
+      joinRoom(roomCode);
+    } else {
+      alert("Please enter a room code");
+    }
+  };
+  
+  // Join a room and start WebRTC setup
+  async function joinRoom(roomCode) {
+    try {
+      // Get local media stream
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localVideo.srcObject = localStream;
+      
+      // Show call interface
+      joinSection.style.display = "block";
+      callSection.style.display = "flex";
+      
+      // Join the room
+      currentRoom = roomCode;
+      socket.emit('join', { room: roomCode });
+      connectionStatus.textContent = "Joined room: " + roomCode + ". Waiting for others...";
+      
+      // Initialize WebRTC
+      setupPeerConnection();
+      
+    } catch (error) {
+      console.error("Error joining room:", error);
+      connectionStatus.textContent = "Error: " + error.message;
+    }
+  }
+  
+  // Set up WebRTC peer connection
+  function setupPeerConnection() {
+    // Create a new RTCPeerConnection
+    peerConnection = new RTCPeerConnection();
+    
+    // Add local stream tracks to the peer connection
+    localStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, localStream);
+    });
+    
+    // Handle ICE candidates
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        socket.emit('ice-candidate', { candidate: event.candidate, room: currentRoom });
+      }
+    };
+    
+    // Handle remote stream
+    peerConnection.ontrack = event => {
+      remoteVideo.srcObject = event.streams[0];
+      connectionStatus.textContent = "Connected to remote peer";
+    };
+  }
+  
+  // Handle socket events
+  socket.on('join', async data => {
+    connectionStatus.textContent = "New peer joined the room. Initiating connection...";
+    
+    // Create an offer as initiator
+    try {
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      socket.emit('offer', { offer, room: currentRoom });
+    } catch (error) {
+      console.error("Error creating offer:", error);
+    }
+  });
+  
+  // Handle incoming offer
+  socket.on('offer', async data => {
+    connectionStatus.textContent = "Received offer. Creating answer...";
+    
+    try {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      socket.emit('answer', { answer, room: currentRoom });
+    } catch (error) {
+      console.error("Error handling offer:", error);
+    }
+  });
+  
+  // Handle incoming answer
+  socket.on('answer', async data => {
+    connectionStatus.textContent = "Received answer. Establishing connection...";
+    
+    try {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    } catch (error) {
+      console.error("Error handling answer:", error);
+    }
+  });
+  
+  // Handle incoming ICE candidates
+  socket.on('ice-candidate', async data => {
+    try {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+    } catch (error) {
+      console.error('Error adding received ice candidate', error);
+    }
+  });
+  
+  // Handle peer leaving
+  socket.on('leave', data => {
+    connectionStatus.textContent = "Remote peer disconnected";
+    if (remoteVideo.srcObject) {
+      remoteVideo.srcObject.getTracks().forEach(track => track.stop());
+      remoteVideo.srcObject = null;
+    }
+  });
+  
+  // Hang up call
+  hangUpButton.addEventListener('click', () => {
+    endCall();
+  });
+  
+  // End call function
+  function endCall() {
+    // Stop all tracks in the local stream
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        track.stop();
+      });
+      localVideo.srcObject = null;
+    }
+    
+    // Stop all tracks in the remote stream if it exists
+    if (remoteVideo.srcObject) {
+      remoteVideo.srcObject.getTracks().forEach(track => {
+        track.stop();
+      });
+      remoteVideo.srcObject = null;
+    }
+    
+    // Close the peer connection
+    if (peerConnection) {
+      peerConnection.close();
+      peerConnection = null;
+    }
+    
+    // Update UI
+    callSection.style.display = "none";
+    joinSection.style.display = "block";
+    roomDisplay.style.display = "none";
+    connectionStatus.textContent = "Call ended";
+    
+    // Leave the room on the server
+    if (currentRoom) {
+      socket.emit('disconnect');
+      currentRoom = null;
+    }
+    
+    console.log("Call ended successfully");
+  }
+  
+  // Handle window/tab close
+  window.addEventListener('beforeunload', () => {
+    endCall();
+  });
+  </script>
 </body>
 </html>
-
