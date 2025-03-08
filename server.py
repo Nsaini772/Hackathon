@@ -1,13 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-# Store the room information
 rooms = {}
 
-# Serve the frontend HTML
 @app.route('/')
 def index():
     return render_template('index.html')
