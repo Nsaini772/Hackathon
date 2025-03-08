@@ -78,6 +78,35 @@
             socket.emit('offer', { offer, room });
         }
 
+        //Send track to Web Audio API 
+        const audioTrack = localStream.getAudioTracks()[0];
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const mediaStreamSource = audioContext.createMediaStreamSource(localStream);
+        const analyser = audioContext.createAnalyser();
+
+        mediaStreamSource.connect(analyser); 
+        
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+
+        // This function will update the raw audio data in real-time
+        // This function will update the raw audio data in real-time
+        function updateAudioData() {
+            analyser.getByteFrequencyData(dataArray);
+            // Send dataArray to the server
+            fetch('/transcribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ data: Array.from(dataArray) })
+            });
+            requestAnimationFrame(updateAudioData);
+        }
+
+        updateAudioData();
+
         // Handle incoming offer
         socket.on('offer', async data => {
             if (!peerConnection) {

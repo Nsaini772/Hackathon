@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import logging
+from google.cloud import speech
+import base64
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -13,6 +15,28 @@ logging.basicConfig(level=logging.INFO)
 @app.route('/')
 def index():
     return render_template('index.html')
+client = speech.SpeechClient()
+
+@app.route('/transcribe', methods=['POST'])
+def transcribe():
+    data = request.json['data']
+    audio_content = base64.b64decode(data)
+
+    # Prepare the audio for transcription
+    audio = speech.RecognitionAudio(content=audio_content)
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=16000,
+        language_code='en-US'
+    )
+
+    # Call Google's Voice to Text API
+    response = client.recognize(config=config, audio=audio)
+
+    # Process the API response
+    transcription = response.results[0].alternatives[0].transcript if response.results else ''
+
+    return jsonify({'transcription': transcription})
 
 # Handle a new connection
 @socketio.on('join')
