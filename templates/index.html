@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Phone Call</title>
+</head>
+<body>
+    <h1>WebRTC Phone Calling App</h1>
+    
+    <div id="local-video-container">
+        <video id="local-video" autoplay muted></video>
+    </div>
+
+    <div id="remote-video-container">
+        <video id="remote-video" autoplay></video>
+    </div>
+
+    <button id="start-call">Start Call</button>
+    <button id="hang-up">Hang Up</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        // Variables
+        const localVideo = document.getElementById("local-video");
+        const remoteVideo = document.getElementById("remote-video");
+        const startCallButton = document.getElementById("start-call");
+        const hangUpButton = document.getElementById("hang-up");
+
+        let localStream;
+        let peerConnection;
+        let socket;
+
+        const serverURL = "http://localhost:5000"; // Your server address
+
+        // Create WebSocket connection
+        socket = io(serverURL);
+
+        // Start the call
+        startCallButton.onclick = () => {
+            startCall();
+        };
+
+        // Hang up the call
+        hangUpButton.onclick = () => {
+            endCall();
+        };
+
+        // Initialize the local media stream (audio/video)
+        async function getLocalStream() {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+            localVideo.srcObject = localStream;
+        }
+
+        // Start the call
+        async function startCall() {
+            await getLocalStream();
+
+            // Create a peer connection
+            peerConnection = new RTCPeerConnection();
+
+            // Add local stream to the connection
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // When a remote stream is added, display it
+            peerConnection.ontrack = event => {
+                remoteVideo.srcObject = event.streams[0];
+            };
+
+            // Create an offer and send it through the signaling server
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            socket.emit("offer", offer);
+        }
+
+        // Handle incoming offer
+        socket.on("offer", async (offer) => {
+            await getLocalStream();
+
+            peerConnection = new RTCPeerConnection();
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            peerConnection.ontrack = event => {
+                remoteVideo.srcObject = event.streams[0];
+            };
+
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+
+            socket.emit("answer", answer);
+        });
+
+        // Handle incoming answer
+        socket.on("answer", (answer) => {
+            peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        });
+
+        // Handle ICE candidates (used to establish peer-to-peer connection)
+        socket.on("ice-candidate", (candidate) => {
+            peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        });
+
+        // Send ICE candidates to the signaling server
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.emit("ice-candidate", event.candidate);
+            }
+        });
+
+        // End the call
+        function endCall() {
+            peerConnection.close();
+            peerConnection = null;
+            localStream.getTracks().forEach(track => track.stop());
+        }
+    </script>
+</body>
+</html>
+
