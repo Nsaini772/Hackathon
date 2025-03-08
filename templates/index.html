@@ -37,6 +37,15 @@
         // Create WebSocket connection
         socket = io(serverURL);
 
+        // Handle connection errors
+        socket.on('connect_error', (error) => {
+            console.error('WebSocket connection error:', error);
+        });
+
+        socket.on('disconnect', (reason) => {
+            console.warn('WebSocket disconnected:', reason);
+        });
+
         // Join the room
         socket.emit('join', { room });
 
@@ -46,8 +55,13 @@
         };
 
         async function startCall() {
-            // Get local media stream
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            // Get local media stream with stereo audio
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: {
+                    channelCount: 2 // Request stereo audio
+                }
+            });
             localVideo.srcObject = localStream;
 
             // Create a new RTCPeerConnection
@@ -76,9 +90,36 @@
 
             // Send the offer to the server
             socket.emit('offer', { offer, room });
-        }
 
-        
+            // Send track to Web Audio API 
+            const audioTrack = localStream.getAudioTracks()[0];
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const mediaStreamSource = audioContext.createMediaStreamSource(localStream);
+            const analyser = audioContext.createAnalyser();
+
+            mediaStreamSource.connect(analyser); 
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            // This function will update the raw audio data in real-time
+            async function updateAudioData() {
+                analyser.getByteFrequencyData(dataArray);
+                // Send dataArray to the server
+                const response = await fetch('/transcribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data: Array.from(dataArray) })
+                });
+                const result = await response.json();
+                console.log('Transcription:', result.transcription);
+                requestAnimationFrame(updateAudioData); // Schedule the next update
+            }
+
+            updateAudioData(); // Start the continuous updates
+        }
 
         // Handle incoming offer
         socket.on('offer', async data => {
@@ -104,35 +145,6 @@
                 console.error('Error adding received ice candidate', e);
             }
         });
-
-        // This function will update the raw audio data in real-time
-        async function updateAudioData(analyser, dataArray) {
-            analyser.getByteFrequencyData(dataArray);
-            // Send dataArray to the server
-            const response = await fetch('/transcribe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ data: dataArray })
-            });
-        }
-
-        //Send track to Web Audio API 
-        if (localStream) {
-            const audioTrack = localStream.getAudioTracks()[0];
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const mediaStreamSource = audioContext.createMediaStreamSource(localStream);
-            const analyser = audioContext.createAnalyser();
-
-            mediaStreamSource.connect(analyser); 
-            
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-
-            // Call updateAudioData with the necessary parameters
-            updateAudioData(analyser, dataArray);
-        }
     </script>
 </body>
 </html>
