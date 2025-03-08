@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeakEasy - Real-time Translation Video Conferencing</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 0;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            margin-right: 0.5rem;
+            font-size: 2rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2.5rem;
+            color: #6c757d;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .demo-wrapper {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .demo-img {
+            width: 100%;
+            display: block;
+        }
+        
+        .features {
+            padding: 5rem 0;
+            background-color: #f8f9fa;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .section-title p {
+            color: #6c757d;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            border-radius: 50%;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .how-it-works {
+            padding: 5rem 0;
+        }
+        
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            counter-reset: step;
+        }
+        
+        .step-card {
+            position: relative;
+            padding: 2rem;
+            padding-left: 4rem;
+        }
+        
+        .step-card::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+        
+        .step-card h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .demo-video {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-align: center;
+        }
+        
+        .video-container {
+            max-width: 800px;
+            margin: 3rem auto 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            background-color: #000;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            position: relative;
+        }
+        
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .cta {
+            padding: 5rem 0;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+        
+        .pricing {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .price-card {
+            background-color: white;
+            padding: 3rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-width: 300px;
+            max-width: 350px;
+            transition: transform 0.3s;
+        }
+        
+        .price-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .price-card.featured {
+            border: 2px solid var(--accent);
+            transform: scale(1.05);
+        }
+        
+        .price-card.featured:hover {
+            transform: scale(1.05) translateY(-5px);
+        }
+        
+        .price-tag {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 1.5rem 0;
+        }
+        
+        .price-period {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        
+        .price-features {
+            list-style: none;
+            margin: 2rem 0;
+        }
+        
+        .price-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .price-features li:last-child {
+            border-bottom: none;
+        }
+        
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+        
+        .footer-column h4 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .footer-links a {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+        
+        .social-icon:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .copyright {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #495057;
+            text-align: center;
+            color: #adb5bd;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .price-card.featured {
+                transform: scale(1);
+            }
+            
+            .price-card.featured:hover {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <span class="logo-icon">🌐</span> SpeakEasy
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <a href="#signup" class="btn">Get Started</a>
+            </nav>
+        </div>
+    </header>
+    
+    <section class="hero">
+        <div class="container">
+            <h1>Break Language Barriers with<br>Real-Time Video Translation</h1>
+            <p>SpeakEasy instantly translates conversations during video calls, displaying text in each participant's preferred language. Communicate effortlessly with anyone, anywhere in the world.</p>
+            <a href="#signup" class="btn">Start Free Trial</a>
+            
+            <div class="demo-wrapper" style="margin-top: 4rem;">
+                <img src="/api/placeholder/900/500" alt="SpeakEasy platform interface" class="demo-img" />
+            </div>
+        </div>
+    </section>
+    
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Powerful Translation Features</h2>
+                <p>Our innovative platform makes global communication seamless and natural</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔤</div>
+                    <h3>Real-Time Translation</h3>
+                    <p>Instant translation of speech into text in over 100 languages with high accuracy and natural phrasing.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Script Display</h3>
+                    <p>See what the other person is saying in your language as they speak, with synchronized text display.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔊</div>
+                    <h3>Clear Audio</h3>
+                    <p>Advanced noise cancellation and audio enhancement for crisp, clear conversations.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Cross-Platform</h3>
+                    <p>Works seamlessly on desktop, mobile, and tablets with no additional software required.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Multi-Way Translation</h3>
+                    <p>Support for group calls with multiple languages being translated simultaneously.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure & Private</h3>
+                    <p>End-to-end encryption and strict privacy protocols ensure your conversations remain confidential.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-title">
+                <h2>How SpeakEasy Works</h2>
+                <p>Breaking language barriers has never been easier</p>
+            </div>
+            
+            <div class="steps">
+                <div class="step-card">
+                    <h3>Create an Account</h3>
+                    <p>Sign up in seconds and set your preferred language for translation.</p>
+                </div>
+                
+                <div class="step-card">
+                    <h3>Invite Participants</h3>
+                    <p>Share a link with anyone you want to speak with, no matter what language they speak.</p>
+                </div>
+                
+                <div class="step-card">
+                    <h3>Start Talking</h3>
+                    <p>Speak naturally in your own language while they do the same.</p>
+                </div>
+                
+                <div class="step-card">
+                    <h3>See Real-Time Translation</h3>
+                    <p>Watch as their words appear on your screen in your language, and yours on theirs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="demo-video">
+        <div class="container">
+            <h2>See SpeakEasy in Action</h2>
+            <p>Watch how our platform breaks down language barriers in real-time</p>
+            
+            <div class="video-container">
+                <div class="video-placeholder">▶️ Demo Video</div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta" id="pricing">
+        <div class="container">
+            <div class="section-title">
+                <h2>Choose Your Plan</h2>
+                <p>Find the perfect solution for your translation needs</p>
+            </div>
+            
+            <div class="pricing">
+                <div class="price-card">
+                    <h3>Basic</h3>
+                    <div class="price-tag">$9.99 <span class="price-period">/month</span></div>
+                    <p>Perfect for occasional international calls</p>
+                    <ul class="price-features">
+                        <li>1-on-1 video calls</li>
+                        <li>10 languages supported</li>
+                        <li>30 minutes per call</li>
+                        <li>Basic text translation</li>
+                        <li>Standard video quality</li>
+                    </ul>
+                    <a href="#signup" class="btn">Get Started</a>
+                </div>
+                
+                <div class="price-card featured">
+                    <h3>Professional</h3>
+                    <div class="price-tag">$24.99 <span class="price-period">/month</span></div>
+                    <p>Ideal for regular international communication</p>
+                    <ul class="price-features">
+                        <li>Up to 5 participants</li>
+                        <li>50+ languages supported</li>
+                        <li>Unlimited call duration</li>
+                        <li>Advanced translation accuracy</li>
+                        <li>HD video quality</li>
+                        <li>Recording capabilities</li>
+                    </ul>
+                    <a href="#signup" class="btn">Get Started</a>
+                </div>
+                
+                <div class="price-card">
+                    <h3>Enterprise</h3>
+                    <div class="price-tag">$59.99 <span class="price-period">/month</span></div>
+                    <p>For businesses with global teams</p>
+                    <ul class="price-features">
+                        <li>Up to 25 participants</li>
+                        <li>100+ languages supported</li>
+                        <li>Unlimited everything</li>
+                        <li>Premium translation models</li>
+                        <li>4K video quality</li>
+                        <li>Advanced security features</li>
+                        <li>Admin controls & analytics</li>
+                    </ul>
+                    <a href="#signup" class="btn">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h4>SpeakEasy</h4>
+                    <p>Breaking down language barriers through innovative video translation technology.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon">f</a>
+                        <a href="#" class="social-icon">t</a>
+                        <a href="#" class="social-icon">in</a>
+                        <a href="#" class="social-icon">ig</a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API</a></li>
+                        <li><a href="#">Tutorials</a></li>
+                        <li><a href="#">Support Center</a></li>
+                        <li><a href="#">Community</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4>Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">GDPR Compliance</a></li>
+                        <li><a href="#">Security</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 SpeakEasy Technologies. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
