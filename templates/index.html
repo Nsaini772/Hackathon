@@ -41,85 +41,63 @@
             startCall();
         };
 
-        // Hang up the call
-        hangUpButton.onclick = () => {
-            endCall();
-        };
-
-        // Initialize the local media stream (audio/video)
-        async function getLocalStream() {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-            localVideo.srcObject = localStream;
-        }
-
-        // Start the call
         async function startCall() {
-            await getLocalStream();
+            // Get local media stream
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            localVideo.srcObject = localStream;
 
-            // Create a peer connection
+            // Create a new RTCPeerConnection
             peerConnection = new RTCPeerConnection();
 
-            // Add local stream to the connection
+            // Add local stream tracks to the peer connection
             localStream.getTracks().forEach(track => {
                 peerConnection.addTrack(track, localStream);
             });
 
-            // When a remote stream is added, display it
+            // Handle ICE candidates
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    socket.emit('ice-candidate', event.candidate);
+                }
+            };
+
+            // Handle remote stream
             peerConnection.ontrack = event => {
                 remoteVideo.srcObject = event.streams[0];
             };
 
-            // Create an offer and send it through the signaling server
+            // Create an offer
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
 
-            socket.emit("offer", offer);
+            // Send the offer to the server
+            socket.emit('offer', offer);
         }
 
         // Handle incoming offer
-        socket.on("offer", async (offer) => {
-            await getLocalStream();
-
-            peerConnection = new RTCPeerConnection();
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
-
-            peerConnection.ontrack = event => {
-                remoteVideo.srcObject = event.streams[0];
-            };
-
+        socket.on('offer', async offer => {
+            if (!peerConnection) {
+                startCall();
+            }
             await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
-
-            socket.emit("answer", answer);
+            socket.emit('answer', answer);
         });
 
         // Handle incoming answer
-        socket.on("answer", (answer) => {
-            peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        socket.on('answer', async answer => {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
         });
 
-        // Handle ICE candidates (used to establish peer-to-peer connection)
-        socket.on("ice-candidate", (candidate) => {
-            peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        });
-
-        // Send ICE candidates to the signaling server
-        peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                socket.emit("ice-candidate", event.candidate);
+        // Handle incoming ICE candidates
+        socket.on('ice-candidate', async candidate => {
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+                console.error('Error adding received ice candidate', e);
             }
         });
-
-        // End the call
-        function endCall() {
-            peerConnection.close();
-            peerConnection = null;
-            localStream.getTracks().forEach(track => track.stop());
-        }
     </script>
 </body>
 </html>
