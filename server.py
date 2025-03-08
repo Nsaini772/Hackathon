@@ -1,17 +1,18 @@
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_cors import CORS
 import logging
 from google.cloud import speech
 import base64
 
-# for local dev
-# # Load API key from credit.json
+# Load API key from credit.json for local dev
 # client = speech.SpeechClient.from_service_account_file("credit.json")
 # for remote
 client = speech.SpeechClient()
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+CORS(app)  # Enable CORS for all routes
+socketio = SocketIO(app, cors_allowed_origins="*")  # Allow all origins for SocketIO
 
 rooms = {}
 
@@ -21,7 +22,6 @@ logging.basicConfig(level=logging.INFO)
 @app.route('/')
 def index():
     return render_template('index.html')
-client = speech.SpeechClient()
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
